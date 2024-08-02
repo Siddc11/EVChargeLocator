@@ -1,25 +1,47 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react';
-import MapView from 'react-native-maps';
-import MapViewStyle from '../../Utils/MapViewStyle.json'
+import { Image, StyleSheet, Text, View } from "react-native";
+import React, { useContext } from "react";
+import MapView, { Marker } from "react-native-maps";
+import MapViewStyle from "../../Utils/MapViewStyle.json";
+import { UserLocationContext } from "../../Context/UserLocationContext";
 
 const MapViewComponent = () => {
-  return (
-    <View>
-         <MapView 
-         style={styles.map} 
-         showsUserLocation={true}
-         customMapStyle={MapViewStyle}
-         />
-    </View>
-  )
-}
+  const { location, setLocation } = useContext(UserLocationContext);
 
-export default MapViewComponent
+  return (
+    location?.latitude && (
+      <View>
+        <MapView
+          style={styles.map}
+          customMapStyle={MapViewStyle}
+          region={{
+            latitude: location?.latitude,
+            longitude: location?.longitude,
+            latitudeDelta: 0.0422,
+            longitudeDelta: 0.0421,
+          }}
+        >
+          <Marker
+            coordinate={{
+              latitude: location?.latitude,
+              longitude: location?.longitude,
+            }}
+          >
+            <Image
+             source={require('../../../assets/images/car.png')}
+             style={{width: 60, height: 60}}
+            />
+          </Marker>
+        </MapView>
+      </View>
+    )
+  );
+};
+
+export default MapViewComponent;
 
 const styles = StyleSheet.create({
-    map: {
-        width: '100%',
-        height: '100%',
-      },
-})
+  map: {
+    width: "100%",
+    height: "100%",
+  },
+});

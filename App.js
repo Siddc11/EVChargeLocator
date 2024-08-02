@@ -2,12 +2,14 @@ import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Login from "./App/Screens/LoginScreen/Login";
 import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-expo";
 import * as SecureStore from "expo-secure-store";
 import { NavigationContainer } from "@react-navigation/native";
 import TabNavigation from "./App/Navigation/TabNavigation";
+import * as Location from 'expo-location';
+import { UserLocationContext } from "./App/Context/UserLocationContext";
 
 
 SplashScreen.preventAutoHideAsync();
@@ -38,6 +40,31 @@ export default function App() {
     "Outfit-SemiBold": require("./assets/fonts/Outfit-SemiBold.ttf"),
   });
 
+  const [location, setLocation] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('Permission to access location was denied');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location.coords);
+
+    })();
+  }, []);
+
+  let text = 'Waiting..';
+  if (errorMsg) {
+    text = errorMsg;
+  } else if (location) {
+    text = JSON.stringify(location);
+  }
+
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded || fontError) {
       await SplashScreen.hideAsync();
@@ -56,6 +83,7 @@ export default function App() {
         "pk_test_YXNzdXJlZC1zdHVyZ2Vvbi04Ni5jbGVyay5hY2NvdW50cy5kZXYk"
       }
     >
+      <UserLocationContext.Provider value={{location,setLocation}}>
       <View style={styles.container} onLayout={onLayoutRootView}>
         <SignedIn>
          <NavigationContainer>
@@ -67,6 +95,7 @@ export default function App() {
         </SignedOut>
         <StatusBar style="auto" />
       </View>
+      </UserLocationContext.Provider>
     </ClerkProvider>
   );
 }
